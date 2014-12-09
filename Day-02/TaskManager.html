@@ -12,6 +12,12 @@
 	</style>
 	<script src="angular.js"></script>
 	<script>
+	/*
+	1. Display the number of tasks / completed tasks in the UI
+	2. Diplay the following message
+		"A new task is added" - whenever a new task is added
+		"# no of completed tasks are removed" - whenever the completed tasks are removed
+	*/
 	function taskController($scope){
 		
 		$scope.taskList = [
@@ -36,7 +42,7 @@
 
 </head>
 <body data-ng-controller="taskController">
-	<h1>Task Manager</h1>
+	<h1>Task Manager [Total # of completed tasks]/[Total # of tasks]</h1>
 	<hr>
 	<label for="">Task :</label>
 	<input type="text" name="" id="" data-ng-model="newTask">
@@ -49,5 +55,6 @@
 			data-ng-click="toggle(item)"
 		>{{item.name}}</li>
 	</ol>
+	<div>[Dispaly a message]</div>
 </body>
 </html>
