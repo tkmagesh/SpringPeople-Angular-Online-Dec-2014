@@ -9,8 +9,13 @@
 		text-decoration: line-through;
 		font-style: italic;
 	}
+	.date {
+		font-style: italic;
+		font-size: small;
+	}
 	</style>
 	<script src="angular.js"></script>
+	<script src="moment.js"></script>
 	<script>
 	//=========== Module ==========================
 	var taskApp = angular.module("taskApp", []);
@@ -46,6 +51,7 @@
 			this.id = defaults.id || new Date().getTime().toString();
 			this.name = defaults.name || "";
 			this.isCompleted = defaults.isCompleted || false;
+			this.createdAt = defaults.createdAt || new Date();
 		}
 
 		Task.prototype.toggle = function(){
@@ -74,8 +80,9 @@
 		$scope.removeCompleted = function(){
 			for(var i=$scope.taskList.length-1;i>=0;i--)
 				if ($scope.taskList[i].isCompleted){
+					taskStorage.remove($scope.taskList[i]);
 					$scope.taskList.splice(i,1);
-					taskStorage.remove(task);
+					
 				}
 			$scope.message = "Zero or more completed tasks are removed";
 		};
@@ -88,7 +95,12 @@
 		};
 
 	});
-	
+	//=========================== Filter ================================
+	taskApp.filter("formatDate", function(){
+		return function(date){
+			return moment(date).fromNow();
+		}
+	});
 	</script>
 
 
@@ -101,11 +113,13 @@
 	<input type="button" value="Add Task" id="btnAddTask" data-ng-click="addTask(newTask)">
 	<input type="button" value="Remove Completed" id="btnRemoveCompleted" data-ng-click="removeCompleted()">
 	<ol>
-		<li 
-			ng-repeat="item in taskList" 
-			data-ng-class="{completed : item.isCompleted}"
+		<li ng-repeat="item in taskList">
+			<span data-ng-class="{completed : item.isCompleted}"
 			data-ng-click="toggle(item)"
-		>{{item.name}}</li>
+		>{{item.name}}</span>
+		<span class="date">[{{item.createdAt | formatDate}}]</span>
+			</li>
+		
 	</ol>
 	<div>{{message}}</div>
 </body>
