@@ -12,8 +12,33 @@
 	</style>
 	<script src="angular.js"></script>
 	<script>
+
+	function TaskStorage(){
+		this.storage = window.localStorage
+	};
+	TaskStorage.prototype.save = function(task){
+		task.id = task.id || new Date().getTime().toString();
+		task.isCompleted = this.isCompleted || false;
+		var taskAsString = window.JSON.stringify(task);
+		this.storage.setItem(task.id, taskAsString);
+	};
+	TaskStorage.prototype.remove = function(task){
+		this.storage.removeItem(task.id);	
+	};
+	TaskStorage.prototype.getAll = function(){
+		var result = [];
+		for(i=0;i<this.storage.length;i++){
+			var key = this.storage.key(i);
+			var taskAsString = this.storage.getItem(key);
+			var taskObj = window.JSON.parse(taskAsString);
+			result.push(new Task(taskObj.id, taskObj.name, taskObj.isCompleted));
+		}
+		return result;
+	}
 	
-	function Task(name, isCompleted){
+	//=========================================================
+	function Task(id, name, isCompleted){
+		this.id = new Date().getTime().toString();
 		this.name = name || "";
 		this.isCompleted = isCompleted || false;
 	}
@@ -22,25 +47,27 @@
 		this.isCompleted = !this.isCompleted;
 	}
 
+	//=========================================================
 	function taskController($scope){
-		
-		$scope.taskList = [
-			new Task("Master JavaScript"),
-			new Task("Explore JQuery"),
-			new Task("Evaluate Reach.js")
-		];
+		var taskStorage = new TaskStorage();
+		$scope.taskList = taskStorage.getAll();
 
 		$scope.addTask = function(taskName){
-			$scope.taskList.push(new Task(taskName));
+			var task = new Task(undefined, taskName, undefined);
+			taskStorage.save(task);
+			$scope.taskList.push(task);
 			$scope.message = "A new task is added";
 		};
 		$scope.toggle = function(task){
 			task.toggle();
+			taskStorage.save(task);
 		};
 		$scope.removeCompleted = function(){
 			for(var i=$scope.taskList.length-1;i>=0;i--)
-				if ($scope.taskList[i].isCompleted)
+				if ($scope.taskList[i].isCompleted){
 					$scope.taskList.splice(i,1);
+					taskStorage.remove(task);
+				}
 			$scope.message = "Zero or more completed tasks are removed";
 		};
 		$scope.getCompletedCount = function(){
