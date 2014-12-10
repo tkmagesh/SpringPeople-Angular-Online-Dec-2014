@@ -101,6 +101,16 @@
 			return moment(date).fromNow();
 		}
 	});
+
+	taskApp.filter("truncate", function(truncateLength){
+		return function(data, length){
+			length = length || truncateLength;
+			data = data || "";
+			return data.length < length ? data : data.substr(0,length) + "...";
+		}
+	});
+	//========================= value =================================
+	taskApp.value("truncateLength", 15);
 	</script>
 
 
@@ -112,11 +122,15 @@
 	<input type="text" name="" id="" data-ng-model="newTask">
 	<input type="button" value="Add Task" id="btnAddTask" data-ng-click="addTask(newTask)">
 	<input type="button" value="Remove Completed" id="btnRemoveCompleted" data-ng-click="removeCompleted()">
+	<hr>
+	<span>Search :</span>
+	<input type="text" data-ng-model="searchTask.name">
+	<hr>
 	<ol>
-		<li ng-repeat="item in taskList">
+		<li ng-repeat="item in taskList | filter:searchTask">
 			<span data-ng-class="{completed : item.isCompleted}"
 			data-ng-click="toggle(item)"
-		>{{item.name}}</span>
+		>{{item.name | truncate}}</span>
 		<span class="date">[{{item.createdAt | formatDate}}]</span>
 			</li>
 		
