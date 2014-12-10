@@ -12,9 +12,10 @@
 	</style>
 	<script src="angular.js"></script>
 	<script>
-
+	//=========== Module ==========================
 	var taskApp = angular.module("taskApp", []);
 
+	//=========== Service =========================
 	taskApp.service("taskStorage", function TaskStorage(Task){
 		this.storage = window.localStorage;
 
@@ -39,7 +40,7 @@
 	});
 	
 	
-	//=========================================================
+	//================= Factory ======================================
 	taskApp.factory("Task", function(){
 		function Task(defaults){
 			this.id = defaults.id || new Date().getTime().toString();
@@ -54,7 +55,7 @@
 	});
 	
 
-	//=========================================================
+	//================ Controller =======================================
 	taskApp.controller("taskController", function ($scope, taskStorage, Task){
 		//var taskStorage = new TaskStorage();
 		console.log("task controller initializing..");
