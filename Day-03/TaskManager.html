@@ -15,41 +15,49 @@
 
 	var taskApp = angular.module("taskApp", []);
 
-	function TaskStorage(){
-		this.storage = window.localStorage
-	};
-	TaskStorage.prototype.save = function(task){
-		var taskAsString = window.JSON.stringify(task);
-		this.storage.setItem(task.id, taskAsString);
-	};
-	TaskStorage.prototype.remove = function(task){
-		this.storage.removeItem(task.id);	
-	};
-	TaskStorage.prototype.getAll = function(){
-		var result = [];
-		for(i=0;i<this.storage.length;i++){
-			var key = this.storage.key(i);
-			var taskAsString = this.storage.getItem(key);
-			var taskObj = window.JSON.parse(taskAsString);
-			result.push(new Task(taskObj));
+	taskApp.service("taskStorage", function TaskStorage(Task){
+		this.storage = window.localStorage;
+
+		this.save = function(task){
+			var taskAsString = window.JSON.stringify(task);
+			this.storage.setItem(task.id, taskAsString);
+		};
+		this.remove = function(task){
+			this.storage.removeItem(task.id);	
+		};
+		this.getAll = function(){
+			console.log("retrieving all tasks from storage");
+			var result = [];
+			for(i=0;i<this.storage.length;i++){
+				var key = this.storage.key(i);
+				var taskAsString = this.storage.getItem(key);
+				var taskObj = window.JSON.parse(taskAsString);
+				result.push(new Task(taskObj));
+			}
+			return result;
 		}
-		return result;
-	}
+	});
+	
 	
 	//=========================================================
-	function Task(defaults){
-		this.id = defaults.id || new Date().getTime().toString();
-		this.name = defaults.name || "";
-		this.isCompleted = defaults.isCompleted || false;
-	}
+	taskApp.factory("Task", function(){
+		function Task(defaults){
+			this.id = defaults.id || new Date().getTime().toString();
+			this.name = defaults.name || "";
+			this.isCompleted = defaults.isCompleted || false;
+		}
 
-	Task.prototype.toggle = function(){
-		this.isCompleted = !this.isCompleted;
-	}
+		Task.prototype.toggle = function(){
+			this.isCompleted = !this.isCompleted;
+		}
+		return Task;	
+	});
+	
 
 	//=========================================================
-	taskApp.controller("taskController", function ($scope){
-		var taskStorage = new TaskStorage();
+	taskApp.controller("taskController", function ($scope, taskStorage, Task){
+		//var taskStorage = new TaskStorage();
+		console.log("task controller initializing..");
 		$scope.taskList = taskStorage.getAll();
 
 		$scope.addTask = function(taskName){
