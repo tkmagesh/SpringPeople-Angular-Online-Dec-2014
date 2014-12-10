@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" ng-app>
+<html lang="en" ng-app="taskApp">
 <head>
 	<meta charset="UTF-8">
 	<title>Task Manager</title>
@@ -13,12 +13,12 @@
 	<script src="angular.js"></script>
 	<script>
 
+	var taskApp = angular.module("taskApp", []);
+
 	function TaskStorage(){
 		this.storage = window.localStorage
 	};
 	TaskStorage.prototype.save = function(task){
-		task.id = task.id || new Date().getTime().toString();
-		task.isCompleted = this.isCompleted || false;
 		var taskAsString = window.JSON.stringify(task);
 		this.storage.setItem(task.id, taskAsString);
 	};
@@ -31,16 +31,16 @@
 			var key = this.storage.key(i);
 			var taskAsString = this.storage.getItem(key);
 			var taskObj = window.JSON.parse(taskAsString);
-			result.push(new Task(taskObj.id, taskObj.name, taskObj.isCompleted));
+			result.push(new Task(taskObj));
 		}
 		return result;
 	}
 	
 	//=========================================================
-	function Task(id, name, isCompleted){
-		this.id = new Date().getTime().toString();
-		this.name = name || "";
-		this.isCompleted = isCompleted || false;
+	function Task(defaults){
+		this.id = defaults.id || new Date().getTime().toString();
+		this.name = defaults.name || "";
+		this.isCompleted = defaults.isCompleted || false;
 	}
 
 	Task.prototype.toggle = function(){
@@ -48,12 +48,12 @@
 	}
 
 	//=========================================================
-	function taskController($scope){
+	taskApp.controller("taskController", function ($scope){
 		var taskStorage = new TaskStorage();
 		$scope.taskList = taskStorage.getAll();
 
 		$scope.addTask = function(taskName){
-			var task = new Task(undefined, taskName, undefined);
+			var task = new Task({name : taskName});
 			taskStorage.save(task);
 			$scope.taskList.push(task);
 			$scope.message = "A new task is added";
@@ -78,8 +78,8 @@
 			return count;
 		};
 
-
-	}
+	});
+	
 	</script>
 
 
