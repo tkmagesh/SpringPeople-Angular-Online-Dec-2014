@@ -13,6 +13,9 @@
 		font-style: italic;
 		font-size: small;
 	}
+	th{
+		cursor: pointer;
+	}
 	</style>
 	<script src="angular.js"></script>
 	<script src="moment.js"></script>
@@ -50,6 +53,7 @@
 		function Task(defaults){
 			this.id = defaults.id || new Date().getTime().toString();
 			this.name = defaults.name || "";
+			this.category = defaults.category || "Personal";
 			this.isCompleted = defaults.isCompleted || false;
 			this.createdAt = defaults.createdAt || new Date();
 		}
@@ -68,8 +72,8 @@
 		$scope.taskList = taskStorage.getAll();
 		
 
-		$scope.addTask = function(taskName){
-			var task = new Task({name : taskName});
+		$scope.addTask = function(taskName, taskCategory){
+			var task = new Task({name : taskName, category : taskCategory});
 			taskStorage.save(task);
 			$scope.taskList.push(task);
 			$scope.message = "A new task is added";
@@ -94,6 +98,16 @@
 					++count;
 			return count;
 		};
+		$scope.sortOrder = "name";
+		$scope.reverse = false;
+		$scope.setSortOrder = function(sortOrder){
+			if ($scope.sortOrder === sortOrder){
+				$scope.reverse = !$scope.reverse;
+			} else {
+				$scope.sortOrder = sortOrder;
+				$scope.reverse =false;
+			}
+		}
 
 	});
 	//=========================== Filter ================================
@@ -120,14 +134,34 @@
 	<h1>Task Manager {{getCompletedCount()}}/{{taskList.length}}</h1>
 	<hr>
 	<label for="">Task :</label>
-	<input type="text" name="" id="" data-ng-model="newTask">
-	<input type="button" value="Add Task" id="btnAddTask" data-ng-click="addTask(newTask)">
+	<input type="text" data-ng-model="newTask">
+	<select ng-model="taskCategory">
+		<option value="Personal">Personal</option>
+		<option value="Official">Official</option>
+		<option value="Recreational">Recreational</option>
+	</select>
+
+	<input type="button" value="Add Task" data-ng-click="addTask(newTask, taskCategory)">
 	<input type="button" value="Remove Completed" id="btnRemoveCompleted" data-ng-click="removeCompleted()">
 	<hr>
 	<span>Search :</span>
 	<input type="text" data-ng-model="searchTask.name">
 	<hr>
-	<ol>
+	<table data-ng-hide="taskList.length === 0">
+		<tr>
+			<th ng-click="setSortOrder('name')">Name</th>
+			<th ng-click="setSortOrder('category')">Category</th>
+			<th ng-click="setSortOrder('createdAt')">Created At</th>
+			<th></th>
+		</tr>
+		<tr data-ng-repeat="item in taskList | filter:searchTask | orderBy:sortOrder:reverse">
+			<td><span data-ng-class="{completed : item.isCompleted}">{{item.name}}</span></td>
+			<td>{{item.category}}</td>
+			<td>{{item.createdAt | formatDate}}</td>
+			<td><input type="button" value="Toggle" data-ng-click="toggle(item)"></td>
+		</tr>
+	</table>
+	<!-- <ol>
 		<li ng-repeat="item in taskList | filter:searchTask">
 			<span data-ng-class="{completed : item.isCompleted}"
 			data-ng-click="toggle(item)"
@@ -135,7 +169,7 @@
 		<span class="date">[{{item.createdAt | formatDate}}]</span>
 			</li>
 		
-	</ol>
+	</ol> -->
 	<div>{{message}}</div>
 </body>
 </html>
