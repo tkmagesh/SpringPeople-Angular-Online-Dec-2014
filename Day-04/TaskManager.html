@@ -109,6 +109,16 @@
 			}
 		}
 
+		$scope.categories = [
+			{name : "Personal", value : "Personal",},
+			{name : "Official", value : "Official",},
+			{name : "Recreational", value : "Recreational"}
+		];
+
+		$scope.taskCategory = $scope.categories[0];
+		$scope.searchTask = {};
+		$scope.searchTask.category = $scope.categories[0];
+
 	});
 	//=========================== Filter ================================
 	taskApp.filter("formatDate", function(){
@@ -135,10 +145,8 @@
 	<hr>
 	<label for="">Task :</label>
 	<input type="text" data-ng-model="newTask">
-	<select ng-model="taskCategory">
-		<option value="Personal">Personal</option>
-		<option value="Official">Official</option>
-		<option value="Recreational">Recreational</option>
+	<select ng-model="taskCategory" data-ng-options="category.value as category.name for category in categories">
+		
 	</select>
 
 	<input type="button" value="Add Task" data-ng-click="addTask(newTask, taskCategory)">
@@ -148,11 +156,8 @@
 	<span>Name :</span>
 	<input type="text" data-ng-model="searchTask.name">
 	<span>Category :</span>
-	<select ng-model="searchTask.category">
-		<option value="">All</option>
-		<option value="Personal">Personal</option>
-		<option value="Official">Official</option>
-		<option value="Recreational">Recreational</option>
+	<select ng-model="searchTask.category" data-ng-options="category.value as category.name for category in categories">
+		
 	</select>
 	<select ng-model="searchTask.isCompleted">
 		<option value="">All</option>
@@ -160,7 +165,16 @@
 		<option value="">InComplete</option>
 	</select>
 	<hr>
-	<table data-ng-hide="taskList.length === 0">
+	<!-- <ol>
+		<li ng-repeat="item in taskList | filter:searchTask">
+			<span data-ng-class="{completed : item.isCompleted}"
+			data-ng-click="toggle(item)"
+		>{{item.name | truncate}}</span>
+		<span class="date">[{{item.createdAt | formatDate}}]</span>
+			</li>
+		
+	</ol> -->
+	<!-- <table data-ng-hide="taskList.length === 0">
 		<tr>
 			<th ng-click="setSortOrder('name')">Name</th>
 			<th ng-click="setSortOrder('category')">Category</th>
@@ -173,16 +187,15 @@
 			<td>{{item.createdAt | formatDate}}</td>
 			<td><input type="button" value="Toggle" data-ng-click="toggle(item)"></td>
 		</tr>
-	</table>
-	<!-- <ol>
-		<li ng-repeat="item in taskList | filter:searchTask">
-			<span data-ng-class="{completed : item.isCompleted}"
-			data-ng-click="toggle(item)"
-		>{{item.name | truncate}}</span>
-		<span class="date">[{{item.createdAt | formatDate}}]</span>
-			</li>
-		
-	</ol> -->
+	</table> -->
+	<div data-ng-repeat="category in categories">
+		<div data-ng-show="category.name == searchTask.category">
+		<h3>{{category.name}}</h3>
+		<ol>
+			<li data-ng-repeat="task in taskList | filter:category.value" >{{task.name}}</li>
+		</ol>
+		</div>
+	</div>
 	<div>{{message}}</div>
 </body>
 </html>
