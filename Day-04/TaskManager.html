@@ -144,8 +144,21 @@
 	<input type="button" value="Add Task" data-ng-click="addTask(newTask, taskCategory)">
 	<input type="button" value="Remove Completed" id="btnRemoveCompleted" data-ng-click="removeCompleted()">
 	<hr>
-	<span>Search :</span>
+	<div>Search :</div>
+	<span>Name :</span>
 	<input type="text" data-ng-model="searchTask.name">
+	<span>Category :</span>
+	<select ng-model="searchTask.category">
+		<option value="">All</option>
+		<option value="Personal">Personal</option>
+		<option value="Official">Official</option>
+		<option value="Recreational">Recreational</option>
+	</select>
+	<select ng-model="searchTask.isCompleted">
+		<option value="">All</option>
+		<option value="">Completed</option>
+		<option value="">InComplete</option>
+	</select>
 	<hr>
 	<table data-ng-hide="taskList.length === 0">
 		<tr>
