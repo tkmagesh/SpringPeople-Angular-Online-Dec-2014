@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="taskApp">
+<head>
+	<meta charset="UTF-8">
+	<title>Task Manager</title>
+	<style>
+	.completed{
+		color : red;
+		text-decoration: line-through;
+		font-style: italic;
+	}
+	.date {
+		font-style: italic;
+		font-size: small;
+	}
+	th{
+		cursor: pointer;
+	}
+	</style>
+	<script src="angular.js"></script>
+	<script src="moment.js"></script>
+	<script>
+	//=========== Module ==========================
+	var taskApp = angular.module("taskApp", []);
+
+	//=========== Service =========================
+	taskApp.service("taskStorage", function TaskStorage(Task){
+		this.storage = window.localStorage;
+
+		this.save = function(task){
+			var taskAsString = window.JSON.stringify(task);
+			this.storage.setItem(task.id, taskAsString);
+		};
+		this.remove = function(task){
+			this.storage.removeItem(task.id);	
+		};
+		this.getAll = function(){
+			console.log("retrieving all tasks from storage");
+			var result = [];
+			for(i=0;i<this.storage.length;i++){
+				var key = this.storage.key(i);
+				var taskAsString = this.storage.getItem(key);
+				var taskObj = window.JSON.parse(taskAsString);
+				result.push(new Task(taskObj));
+			}
+			return result;
+		}
+	});
+	
+	
+	//================= Factory ======================================
+	taskApp.factory("Task", function(){
+		function Task(defaults){
+			this.id = defaults.id || new Date().getTime().toString();
+			this.name = defaults.name || "";
+			this.category = defaults.category || "Personal";
+			this.isCompleted = defaults.isCompleted || false;
+			this.createdAt = defaults.createdAt || new Date();
+		}
+
+		Task.prototype.toggle = function(){
+			this.isCompleted = !this.isCompleted;
+		}
+		return Task;	
+	});
+	
+
+	//================ Controller =======================================
+	taskApp.controller("taskController", function ($scope, taskStorage, Task, $http){
+		//var taskStorage = new TaskStorage();
+		var promise = $http({method : "get", url : "/tasks.json"});
+		promise.then(function(response){
+			$scope.taskList = response.data.tasks;
+		});
+
+		$scope.taskList = []; //taskStorage.getAll();
+		
+
+		$scope.addTask = function(taskName, taskCategory){
+			var task = new Task({name : taskName, category : taskCategory});
+			taskStorage.save(task);
+			$scope.taskList.push(task);
+			$scope.message = "A new task is added";
+		};
+		$scope.toggle = function(task){
+			task.toggle();
+			taskStorage.save(task);
+		};
+		$scope.removeCompleted = function(){
+			for(var i=$scope.taskList.length-1;i>=0;i--)
+				if ($scope.taskList[i].isCompleted){
+					taskStorage.remove($scope.taskList[i]);
+					$scope.taskList.splice(i,1);
+					
+				}
+			$scope.message = "Zero or more completed tasks are removed";
+		};
+		$scope.getCompletedCount = function(){
+			var count = 0;
+			for(var i=0;i<$scope.taskList.length;i++)
+				if ($scope.taskList[i].isCompleted)
+					++count;
+			return count;
+		};
+		$scope.sortOrder = "name";
+		$scope.reverse = false;
+		$scope.setSortOrder = function(sortOrder){
+			if ($scope.sortOrder === sortOrder){
+				$scope.reverse = !$scope.reverse;
+			} else {
+				$scope.sortOrder = sortOrder;
+				$scope.reverse =false;
+			}
+		}
+
+		$scope.categories = [
+			{name : "Personal", value : "Personal",},
+			{name : "Official", value : "Official",},
+			{name : "Recreational", value : "Recreational"}
+		];
+
+		$scope.taskCategory = $scope.categories[0];
+		$scope.searchTask = {};
+		$scope.searchTask.category = $scope.categories[0];
+
+	});
+	//=========================== Filter ================================
+	taskApp.filter("formatDate", function(){
+		return function(date){
+			return moment(date).fromNow();
+		}
+	});
+
+	taskApp.filter("truncate", function(truncateLength){
+		return function(data, length){
+			length = length || truncateLength;
+			data = data || "";
+			return data.length < length ? data : data.substr(0,length) + "...";
+		}
+	});
+	//========================= value =================================
+	taskApp.value("truncateLength", 15);
+	</script>
+
+
+</head>
+<body data-ng-controller="taskController">
+	<h1>Task Manager {{getCompletedCount()}}/{{taskList.length}}</h1>
+	<hr>
+	<label for="">Task :</label>
+	<input type="text" data-ng-model="newTask">
+	<select ng-model="taskCategory" data-ng-options="category.value as category.name for category in categories">
+		
+	</select>
+
+	<input type="button" value="Add Task" data-ng-click="addTask(newTask, taskCategory)">
+	<input type="button" value="Remove Completed" id="btnRemoveCompleted" data-ng-click="removeCompleted()">
+	<hr>
+	<div>Search :</div>
+	<span>Name :</span>
+	<input type="text" data-ng-model="searchTask.name">
+	<span>Category :</span>
+	<select ng-model="searchTask.category" data-ng-options="category.value as category.name for category in categories">
+		
+	</select>
+	<select ng-model="searchTask.isCompleted">
+		<option value="">All</option>
+		<option value="">Completed</option>
+		<option value="">InComplete</option>
+	</select>
+	<hr>
+	<!-- <ol>
+		<li ng-repeat="item in taskList | filter:searchTask">
+			<span data-ng-class="{completed : item.isCompleted}"
+			data-ng-click="toggle(item)"
+		>{{item.name | truncate}}</span>
+		<span class="date">[{{item.createdAt | formatDate}}]</span>
+			</li>
+		
+	</ol> -->
+	<!-- <table data-ng-hide="taskList.length === 0">
+		<tr>
+			<th ng-click="setSortOrder('name')">Name</th>
+			<th ng-click="setSortOrder('category')">Category</th>
+			<th ng-click="setSortOrder('createdAt')">Created At</th>
+			<th></th>
+		</tr>
+		<tr data-ng-repeat="item in taskList | filter:searchTask | orderBy:sortOrder:reverse">
+			<td><span data-ng-class="{completed : item.isCompleted}">{{item.name}}</span></td>
+			<td>{{item.category}}</td>
+			<td>{{item.createdAt | formatDate}}</td>
+			<td><input type="button" value="Toggle" data-ng-click="toggle(item)"></td>
+		</tr>
+	</table> -->
+	<div data-ng-repeat="category in categories">
+		<div >
+		<h3>{{category.name}}</h3>
+		<ol>
+			<li data-ng-repeat="task in taskList | filter:category.value" >{{task.name}}</li>
+		</ol>
+		</div>
+	</div>
+	<div>{{message}}</div>
+</body>
+</html>
