@@ -24,7 +24,7 @@
 	var taskApp = angular.module("taskApp", []);
 
 	//=========== Service =========================
-	taskApp.service("taskStorage", function TaskStorage(Task){
+	taskApp.service("taskStorage", function TaskStorage(Task, $http, $q){
 		this.storage = window.localStorage;
 
 		this.save = function(task){
@@ -34,8 +34,19 @@
 		this.remove = function(task){
 			this.storage.removeItem(task.id);	
 		};
-		this.getAll = function(){
-			//get the data from the server
+		this.getAll = function(){//get the data from the server
+			var deferred = $q.defer();
+
+			var httpPromise = $http({method : "get", url : "/tasks.json"});
+			httpPromise.then(function(response){
+				var result = [];
+				angular.forEach(response.data.tasks, function(taskData){
+					result.push(new Task(taskData));
+				});
+				deferred.resolve(result);
+			});	
+		
+			return deferred.promise;
 		}
 	});
 	
@@ -60,16 +71,13 @@
 	//================ Controller =======================================
 	taskApp.controller("taskController", function ($scope, taskStorage, Task, $http){
 		//var taskStorage = new TaskStorage();
-		var promise = $http({method : "get", url : "/tasks.json"});
-		promise.then(function(response){
-			$scope.taskList = [];
-			angular.forEach(response.data.tasks, function(taskData){
-				$scope.taskList.push(new Task(taskData));
-			});
-
+		
+		$scope.taskList = []; 
+		var promise = taskStorage.getAll();
+		promise.then(function(result){
+			$scope.taskList = result;
 		});
-
-		$scope.taskList = []; //taskStorage.getAll();
+		
 		
 
 		$scope.addTask = function(taskName, taskCategory){
