@@ -35,15 +35,7 @@
 			this.storage.removeItem(task.id);	
 		};
 		this.getAll = function(){
-			console.log("retrieving all tasks from storage");
-			var result = [];
-			for(i=0;i<this.storage.length;i++){
-				var key = this.storage.key(i);
-				var taskAsString = this.storage.getItem(key);
-				var taskObj = window.JSON.parse(taskAsString);
-				result.push(new Task(taskObj));
-			}
-			return result;
+			//get the data from the server
 		}
 	});
 	
@@ -70,7 +62,11 @@
 		//var taskStorage = new TaskStorage();
 		var promise = $http({method : "get", url : "/tasks.json"});
 		promise.then(function(response){
-			$scope.taskList = response.data.tasks;
+			$scope.taskList = [];
+			angular.forEach(response.data.tasks, function(taskData){
+				$scope.taskList.push(new Task(taskData));
+			});
+
 		});
 
 		$scope.taskList = []; //taskStorage.getAll();
@@ -196,7 +192,7 @@
 		<div >
 		<h3>{{category.name}}</h3>
 		<ol>
-			<li data-ng-repeat="task in taskList | filter:category.value" >{{task.name}}</li>
+			<li data-ng-repeat="task in taskList | filter:category.value" data-ng-click="toggle(task)" ng-class="{completed : task.isCompleted}" >{{task.name}}</li>
 		</ol>
 		</div>
 	</div>
